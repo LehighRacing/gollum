@@ -58,4 +58,5 @@ require (
 	gopkg.in/olivere/elastic.v5 v5.0.74
 	gopkg.in/oschwald/geoip2-golang.v1 v1.2.1
 	gopkg.in/yaml.v2 v2.2.1
+	periph.io/x/periph v3.4.0+incompatible
 )
