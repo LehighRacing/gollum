@@ -60,3 +60,5 @@ require (
 	gopkg.in/yaml.v2 v2.2.1
 	periph.io/x/periph v3.4.0+incompatible
 )
+
+go 1.13

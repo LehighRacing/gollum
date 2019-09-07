@@ -50,8 +50,8 @@ import (
 type Imu struct {
 	core.SimpleConsumer `gollumdoc:"embed_type"`
 	busName             string `config:"Bus"`
-	accelAddr           string `config:"AccelerometerAddress" default:"0x6A"`
-	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1C"`
+	accelAddr           string `config:"AccelerometerAddress" default:"0x6A`
+	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1C`
 	bus                 i2c.BusCloser
 	accel               *i2c.Dev
 	magneto             *i2c.Dev
@@ -104,27 +104,39 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 
 	// Do some configuration for the accelerometer and magnetometer here!
 
+	//TODO: ODR and Scale
+	cons.initGyro()
+	cons.initAccel()
+	cons.initMag()
+
 	// For example:
-	err = writeReg(cons.accel, 0x10, []byte{0x20})
-	if err != nil {
-		cons.Logger.Error(err)
-	}
+	//err = writeReg(cons.accel, 0x10, []byte{0x20})
+	//if err != nil {
+	//	cons.Logger.Error(err)
+	//}
 }
 
 func (cons *Imu) pollAccel() {
 	for cons.IsActive() {
 		// Poll the accelerometer status register for data and call cons.Enqueue()
 
-		// For example:
-		r, err := readReg(cons.accel, 0x20, 2)
+		r, err := readReg(cons.accel, 0x28, 6)
 		if err != nil {
 			cons.Logger.Error(err)
 		}
 
-		value := (r[1] << 8) | r[0]
+		valuex := (r[1] << 8) | r[0]
+		valuey := (r[3] << 8) | r[2]
+		valuez := (r[5] << 8) | r[4]
 
 		// Enqueue new value
-		str := fmt.Sprintf("{\"value\":%d}\n", value)
+		str := fmt.Sprintf("{\"X\":%d}\n", valuex)
+		cons.Enqueue([]byte(str))
+		// Enqueue new value
+		str = fmt.Sprintf("{\"Y\":%d}\n", valuey)
+		cons.Enqueue([]byte(str))
+		// Enqueue new value
+		str = fmt.Sprintf("{\"Z\":%d}\n", valuez)
 		cons.Enqueue([]byte(str))
 
 		// Don't spam
@@ -139,4 +151,86 @@ func (cons *Imu) Consume(workers *sync.WaitGroup) {
 	go cons.pollAccel()
 
 	cons.ControlLoop()
+}
+
+func (cons *Imu) initGyro() {
+	var err error
+	err = writeReg(cons.accel, 0x10, []byte{0xC0})//CTRL_REG1_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.accel, 0x11, []byte{0x00})//CTRL_REG2_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.accel, 0x12, []byte{0x00})//CTRL_REG3_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.accel, 0x1E, []byte{0x38})//CTRL_REG4_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	//Calibration
+	r, err := readReg(cons.accel, 0x10, 1)//CTRL_REG1_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	var gScl=1
+	r[0]&=byte (0xFF^(0x3<<3))
+	r[0]|=byte (gScl<<3)
+	err = writeReg(cons.accel, 0x10, r)//CTRL_REG1_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+}
+func (cons *Imu) initAccel() {
+	var err error
+	err = writeReg(cons.accel, 0x1F, []byte{0x38})//CTRL_REG5_XL
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.accel, 0x20, []byte{0x00})//CTRL_REG6_XL
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.accel, 0x21, []byte{0x00})//CTRL_REG6_XL
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	//Calibration
+	r, err := readReg(cons.accel, 0x20, 1)//CTRL_REG1_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	var aScl=1
+	r[0]&=byte (0xC7)
+	r[0]|=byte (aScl<<3)
+	err = writeReg(cons.accel, 0x20, r)//CTRL_REG1_G
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+}
+func (cons *Imu) initMag() {
+	var err error
+	err = writeReg(cons.magneto, 0x20, []byte{0x1C})//CTRL_REG1_M
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.magneto, 0x21, []byte{0x00})//CTRL_REG2_M
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.magneto, 0x22, []byte{0x00})//CTRL_REG3_M
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.magneto, 0x23, []byte{0x00})//CTRL_REG4_M
+	if err != nil {
+		cons.Logger.Error(err)
+	}
+	err = writeReg(cons.magneto, 0x24, []byte{0x00})//CTRL_REG5_M
+	if err != nil {
+		cons.Logger.Error(err)
+	}
 }
