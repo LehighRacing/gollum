@@ -41,7 +41,7 @@ pi:
 
 .PHONY: bbb # Build gollum zip-file for BeagleBone Black / Linux (ARMv7)
 bbb:
-	@echo "\033[0;33mBuilding for BeagleBone Black (Linux/ARMv7)\033[0;0m"
+	@echo -e "\033[0;33mBuilding for BeagleBone Black (Linux/ARMv7)\033[0;0m"
 	@GOOS=linux GOARCH=arm GOARM=7 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum
 	@zip dist/gollum-$(GOLLUM_VERSION)-Linux_Arm7.zip gollum
 

@@ -50,8 +50,8 @@ import (
 type Imu struct {
 	core.SimpleConsumer `gollumdoc:"embed_type"`
 	busName             string `config:"Bus"`
-	accelAddr           string `config:"AccelerometerAddress" default:"0x6A`
-	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1C`
+	accelAddr           string `config:"AccelerometerAddress" default:"0x6B`
+	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1E`
 	bus                 i2c.BusCloser
 	accel               *i2c.Dev
 	magneto             *i2c.Dev
@@ -107,7 +107,8 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 	//TODO: ODR and Scale
 	cons.initGyro()
 	cons.initAccel()
-	cons.initMag()
+	//must add magnetometer address (0x1E) to device tree, otherwise errors
+	//cons.initMag()
 
 	// For example:
 	//err = writeReg(cons.accel, 0x10, []byte{0x20})
@@ -116,6 +117,9 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 	//}
 }
 
+//OUT_X_XL=0x28-0x29
+//OUT_Y_XL=0x2A-0x2B
+//OUT_Z_XL=0x2C-0x2D
 func (cons *Imu) pollAccel() {
 	for cons.IsActive() {
 		// Poll the accelerometer status register for data and call cons.Enqueue()
@@ -171,14 +175,19 @@ func (cons *Imu) initGyro() {
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	//Calibration
+	//Set scale
 	r, err := readReg(cons.accel, 0x10, 1)//CTRL_REG1_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	var gScl=1
+	var gScl=0
 	r[0]&=byte (0xFF^(0x3<<3))
 	r[0]|=byte (gScl<<3)
+	//Set ODR
+	var gODR=0x1//14.9Hz
+	r[0]&=byte (0xFF^(0x7<<5))
+	r[0]|=byte (gODR<<5)
+	//Write both
 	err = writeReg(cons.accel, 0x10, r)//CTRL_REG1_G
 	if err != nil {
 		cons.Logger.Error(err)
@@ -194,19 +203,24 @@ func (cons *Imu) initAccel() {
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.accel, 0x21, []byte{0x00})//CTRL_REG6_XL
+	err = writeReg(cons.accel, 0x21, []byte{0x00})//CTRL_REG7_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	//Calibration
-	r, err := readReg(cons.accel, 0x20, 1)//CTRL_REG1_G
+	//Set scale
+	r, err := readReg(cons.accel, 0x20, 1)//CTRL_REG6_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	var aScl=1
+	var aScl=0//+-2g
 	r[0]&=byte (0xC7)
 	r[0]|=byte (aScl<<3)
-	err = writeReg(cons.accel, 0x20, r)//CTRL_REG1_G
+	//Set ODR
+	var aODR=0x1//10Hz
+	r[0]&=byte (0x1F)
+	r[0]|=byte (aODR<<5)
+	//Write both
+	err = writeReg(cons.accel, 0x20, r)//CTRL_REG6_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
