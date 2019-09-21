@@ -5,5 +5,4 @@ DIR=$(pwd)/$(dirname $0)
 cd $DIR
 ZIP=$(ls dist/ -tr1 | grep gollum | tail -n1)
 echo $ZIP
-echo dist/$ZIP $USER@$BBB:dist/
 unzip dist/$ZIP

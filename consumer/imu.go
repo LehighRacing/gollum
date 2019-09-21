@@ -50,10 +50,12 @@ import (
 type Imu struct {
 	core.SimpleConsumer `gollumdoc:"embed_type"`
 	busName             string `config:"Bus"`
-	accelAddr           string `config:"AccelerometerAddress" default:"0x6B`
-	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1E`
+	accelAddr           string `config:"AccelerometerAddress" default:"0x6B` //TODO:This not being set right
+	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1E` //TODO:This is not being set right
 	bus                 i2c.BusCloser
 	accel               *i2c.Dev
+	gRes                float32
+	aRes                float32
 	magneto             *i2c.Dev
 }
 
@@ -84,19 +86,26 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 	}
 
 	// Open I2C Bus
-	if cons.bus, err = i2creg.Open(cons.busName); err != nil {
+	//fmt.Printf("open I2C bus\n");
+	if cons.bus, err = i2creg.Open("/dev/i2c-2"/*cons.busName*/); err != nil {
 		cons.Logger.Error(err)
 	}
 
 	// Parse out the accelerometer address
-	accelAddrInt, err := strconv.ParseUint(cons.accelAddr, 0, 16)
+	//fmt.Printf("parse XL address from:%s\n",cons.accelAddr);
+	//accelAddrInt, err := strconv.ParseUint(cons.accelAddr, 0, 16) //TODO: Fix this
+	accelAddrInt, err := strconv.ParseUint("0x6B", 0, 16)
+	//accelAddrInt := 0x6B
 	if err != nil {
 		cons.Logger.Error(err)
 	}
+	//fmt.Printf("accel=%x\n",accelAddrInt);
 	cons.accel = &i2c.Dev{Bus: cons.bus, Addr: uint16(accelAddrInt)}
 
 	// Parse out the magnetometer address
-	magnetoAddrInt, err := strconv.ParseUint(cons.magnetoAddr, 0, 16)
+	//fmt.Printf("parse magnet address\n");
+	//magnetoAddrInt, err := strconv.ParseUint(cons.magnetoAddr, 0, 16) //TODO: Fix this
+	magnetoAddrInt := 0x1E
 	if err != nil {
 		cons.Logger.Error(err)
 	}
@@ -104,17 +113,10 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 
 	// Do some configuration for the accelerometer and magnetometer here!
 
-	//TODO: ODR and Scale
 	cons.initGyro()
 	cons.initAccel()
 	//must add magnetometer address (0x1E) to device tree, otherwise errors
 	//cons.initMag()
-
-	// For example:
-	//err = writeReg(cons.accel, 0x10, []byte{0x20})
-	//if err != nil {
-	//	cons.Logger.Error(err)
-	//}
 }
 
 //OUT_X_XL=0x28-0x29
@@ -129,23 +131,91 @@ func (cons *Imu) pollAccel() {
 			cons.Logger.Error(err)
 		}
 
-		valuex := (r[1] << 8) | r[0]
-		valuey := (r[3] << 8) | r[2]
-		valuez := (r[5] << 8) | r[4]
+		valuex := uint16(r[1] << 8) | uint16(r[0])
+		valuey := uint16(r[3] << 8) | uint16(r[2])
+		valuez := uint16(r[5] << 8) | uint16(r[4])
+		fvaluex := cons.calcVal(valuex,cons.aRes)
+		fvaluey := cons.calcVal(valuey,cons.aRes)
+		fvaluez := cons.calcVal(valuez,cons.aRes)
 
-		// Enqueue new value
+		//Enqueue raw data
+		str := fmt.Sprintf("{\"XL\":%d,%d,%d}\n",valuex,valuey,valuez)
+		cons.Enqueue([]byte(str))
+		//Enqueue calculated data
+		str = fmt.Sprintf("{\"XLCalc\":%f,%f,%f}\n",fvaluex,fvaluey,fvaluez)
+		cons.Enqueue([]byte(str))
+
+		/*// Enqueue new value
 		str := fmt.Sprintf("{\"X\":%d}\n", valuex)
+		cons.Enqueue([]byte(str))
+		str = fmt.Sprintf("{\"Xf\":%f}\n", fvaluex)
 		cons.Enqueue([]byte(str))
 		// Enqueue new value
 		str = fmt.Sprintf("{\"Y\":%d}\n", valuey)
 		cons.Enqueue([]byte(str))
+		str = fmt.Sprintf("{\"Yf\":%f}\n", fvaluey)
+		cons.Enqueue([]byte(str))
 		// Enqueue new value
 		str = fmt.Sprintf("{\"Z\":%d}\n", valuez)
 		cons.Enqueue([]byte(str))
+		str = fmt.Sprintf("{\"Zf\":%f}\n", fvaluez)
+		cons.Enqueue([]byte(str))*/
 
 		// Don't spam
+		// collect data every 100 milliseconds (10Hz)
 		time.Sleep(100 * time.Millisecond)
 	}
+}
+
+func (cons *Imu) pollGyro() {
+	for cons.IsActive() {
+		// Poll the gyrocope status register for data and call cons.Enqueue()
+
+		r, err := readReg(cons.accel, 0x18, 6)
+		if err != nil {
+			cons.Logger.Error(err)
+		}
+
+		valuex := uint16(r[1] << 8) | uint16(r[0])
+		valuey := uint16(r[3] << 8) | uint16(r[2])
+		valuez := uint16(r[5] << 8) | uint16(r[4])
+		fvaluex := cons.calcVal(valuex,cons.gRes)
+		fvaluey := cons.calcVal(valuey,cons.gRes)
+		fvaluez := cons.calcVal(valuez,cons.gRes)
+
+		//Enqueue raw data
+		str := fmt.Sprintf("{\"G\":%d,%d,%d}\n",valuex,valuey,valuez)
+		cons.Enqueue([]byte(str))
+		//Enqueue calculated data
+		str = fmt.Sprintf("{\"GCalc\":%f,%f,%f}\n",fvaluex,fvaluey,fvaluez)
+		cons.Enqueue([]byte(str))
+
+		/*// Enqueue new value
+		str := fmt.Sprintf("{\"XG\":%d}\n", valuex)
+		cons.Enqueue([]byte(str))
+		str = fmt.Sprintf("{\"XGf\":%f}\n", fvaluex)
+		cons.Enqueue([]byte(str))
+		// Enqueue new value
+		str = fmt.Sprintf("{\"YG\":%d}\n", valuey)
+		cons.Enqueue([]byte(str))
+		str = fmt.Sprintf("{\"YGf\":%f}\n", fvaluey)
+		cons.Enqueue([]byte(str))
+		// Enqueue new value
+		str = fmt.Sprintf("{\"ZG\":%d}\n", valuez)
+		cons.Enqueue([]byte(str))
+		str = fmt.Sprintf("{\"ZGf\":%f}\n", fvaluez)
+		cons.Enqueue([]byte(str))*/
+
+		// Don't spam
+		// collect data every 100 milliseconds (10Hz)
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func (cons *Imu) calcVal(value uint16, res float32)(float32) {
+	//fmt.Printf("%d\n",value)
+	out:=float32(value)*res
+	return out
 }
 
 func (cons *Imu) Consume(workers *sync.WaitGroup) {
@@ -153,16 +223,19 @@ func (cons *Imu) Consume(workers *sync.WaitGroup) {
 	defer cons.bus.Close()
 
 	go cons.pollAccel()
+	go cons.pollGyro()
 
 	cons.ControlLoop()
 }
 
 func (cons *Imu) initGyro() {
+	fmt.Printf("initGyro\n");
 	var err error
 	err = writeReg(cons.accel, 0x10, []byte{0xC0})//CTRL_REG1_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
+	cons.Logger.Error(err)
 	err = writeReg(cons.accel, 0x11, []byte{0x00})//CTRL_REG2_G
 	if err != nil {
 		cons.Logger.Error(err)
@@ -192,14 +265,18 @@ func (cons *Imu) initGyro() {
 	if err != nil {
 		cons.Logger.Error(err)
 	}
+	//calcgRes
+	//00=245,01=500,11=2000
+	cons.gRes=float32(245)/32768.0
 }
 func (cons *Imu) initAccel() {
+	fmt.Printf("initAccel\n");
 	var err error
 	err = writeReg(cons.accel, 0x1F, []byte{0x38})//CTRL_REG5_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.accel, 0x20, []byte{0x00})//CTRL_REG6_XL
+	err = writeReg(cons.accel, 0x20, []byte{0x20})//CTRL_REG6_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
@@ -224,6 +301,9 @@ func (cons *Imu) initAccel() {
 	if err != nil {
 		cons.Logger.Error(err)
 	}
+	//calcaRes
+	//00=2,01=16,10=4,11=8
+	cons.aRes=float32(2)/32768.0
 }
 func (cons *Imu) initMag() {
 	var err error
