@@ -1,0 +1,9 @@
+#!/bin/bash
+USER=debian
+BBB=192.168.6.2
+DIR=$(pwd)/$(dirname $0)
+cd $DIR
+ZIP=$(ls dist/ -tr1 | grep gollum | tail -n1)
+echo $ZIP
+echo dist/$ZIP $USER@$BBB:dist/
+scp dist/$ZIP $USER@$BBB:dist/
