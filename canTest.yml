@@ -1,0 +1,60 @@
+Can0In:
+    Type: consumer.Can
+    Streams: can0
+    Interface: can0
+
+GpsdIn:
+    Type: consumer.Gpsd
+    Streams: gpsd
+
+IMUIn:
+    Type: consumer.Imu
+    Streams: imu
+    Bus: I2C2
+
+ConsoleOut:
+    Type: producer.Console
+    Streams: "*"
+    Modulators:
+        - format.StreamName:
+              Separator: ", "
+        - format.Timestamp:
+              Timestamp: "2006-01-02T15:04:05.999999999Z07:00, "
+
+WebsocketOut:
+    Type: producer.Websocket
+    Streams: "*"
+    Address: ":8888"
+    Modulators:
+         - format.StreamName:
+               Separator: ", "
+         - format.Timestamp:
+               Timestamp: "2006-01-02T15:04:05.999999999Z07:00, "
+ 
+    # SocketOut:
+    #     Type: producer.Socket
+    #     Address: ":5880"
+    #     Streams: "*"
+    #     Batch:
+    #         MaxCount: 64
+    #         FlushCount: 32
+    #         TimeoutSec: 3
+    #         AckTimeoutMs: 1000
+    #     Modulators:
+    #          - format.StreamName:
+    #                Separator: ", "
+    #          - format.Timestamp:
+    #                Timestamp: "2006-01-02T15:04:05.999999999Z07:00, "
+
+# SDCardOut:
+#     Type: producer.File
+#     Streams: "*"
+#     File: "/mnt/sdcard/daq.log"
+#     Rotation:
+#         Enable: true
+#         At: "4:00" # This should be midnight EDT
+#     Modulators:
+#         - format.StreamName:
+#               Separator: ", "
+#         - format.Timestamp:
+#               Timestamp: "2006-01-02T15:04:05.999999999Z07:00, "
