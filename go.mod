@@ -5,6 +5,7 @@ require (
 	github.com/Shopify/sarama v1.17.0
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/abbot/go-http-auth v0.4.0
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/artyom/fb303 v0.0.0-20130902104109-fa4a241cefb1
 	github.com/artyom/scribe v0.0.0-20130902104122-35c1da66e76d
@@ -23,18 +24,22 @@ require (
 	github.com/go-redis/redis v6.14.0+incompatible
 	github.com/golang/protobuf v1.2.0
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/gorilla/websocket v1.3.0
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.3 // indirect
+	github.com/mattn/goveralls v0.0.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/miekg/pcap v0.0.0-20170124221734-51d9d986bf8d
 	github.com/mmcloughlin/geohash v0.0.0-20180625052535-3b756d8ac3d9
 	github.com/mssola/user_agent v0.4.1
+	github.com/nicksnyder/go-i18n v1.10.1 // indirect
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/oschwald/maxminddb-golang v1.3.0 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pierrec/lz4 v2.0.3+incompatible // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -47,7 +52,6 @@ require (
 	github.com/sirupsen/logrus v1.0.6
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v0.0.0-20180222194500-ef6db91d284a // indirect
-	github.com/stretchr/testify v1.2.2 // indirect
 	github.com/trivago/grok v1.0.0
 	github.com/trivago/tgo v1.0.5
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
@@ -58,11 +62,13 @@ require (
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/tools v0.0.0-20200904185747-39188db58858 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
+	gopkg.in/alecthomas/gometalinter.v2 v2.0.12 // indirect
+	gopkg.in/alecthomas/kingpin.v3-unstable v3.0.0-20191105091915-95d230a53780 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/mcuadros/go-syslog.v2 v2.2.1
 	gopkg.in/olivere/elastic.v5 v5.0.74
 	gopkg.in/oschwald/geoip2-golang.v1 v1.2.1
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.3.0
 	periph.io/x/periph v3.4.0+incompatible
 )
 

@@ -17,48 +17,48 @@ TAGS_INTEGRATION=integration
 
 .PHONY: freebsd # Build gollum zip-file for FreeBSD (x64)
 freebsd:
-	@echo "\033[0;33mBuilding for FreeBSD/x64\033[0;0m"
+	@printf "\033[0;33mBuilding for FreeBSD/x64\033[0;0m"
 	@GOOS=freebsd GOARCH=amd64 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum
 	@zip dist/gollum-$(GOLLUM_VERSION)-FreeBSD_x64.zip gollum
 
 .PHONY: linux # Build gollum zip-file for Linux (x64)
 linux:
-	@echo "\033[0;33mBuilding for Linux/x64\033[0;0m"
+	@printf "\033[0;33mBuilding for Linux/x64\033[0;0m"
 	@GOOS=linux GOARCH=amd64 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum
 	@zip dist/gollum-$(GOLLUM_VERSION)-Linux_x64.zip gollum
 
 .PHONY: mac # Build gollum zip-file for MacOS X (x64)
 mac:
-	@echo "\033[0;33mBuilding for MacOS X (MacOS/x64)\033[0;0m"
+	@printf "\033[0;33mBuilding for MacOS X (MacOS/x64)\033[0;0m"
 	@GOOS=darwin GOARCH=amd64 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum
 	@zip dist/gollum-$(GOLLUM_VERSION)-MacOS_x64.zip gollum
 
 .PHONY: pi # Build gollum zip-file for Raspberry Pi / Linux (ARMv6)
 pi:
-	@echo "\033[0;33mBuilding for Raspberry Pi (Linux/ARMv6)\033[0;0m"
+	@printf "\033[0;33mBuilding for Raspberry Pi (Linux/ARMv6)\033[0;0m"
 	@GOOS=linux GOARCH=arm GOARM=6 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum
 	@zip dist/gollum-$(GOLLUM_VERSION)-Linux_Arm6.zip gollum
 
 .PHONY: bbb # Build gollum zip-file for BeagleBone Black / Linux (ARMv7)
 bbb:
-	@echo -e "\033[0;33mBuilding for BeagleBone Black (Linux/ARMv7)\033[0;0m"
+	@printf "\033[0;33mBuilding for BeagleBone Black (Linux/ARMv7)\033[0;0m"
 	@GOOS=linux GOARCH=arm GOARM=7 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum
 	@zip dist/gollum-$(GOLLUM_VERSION)-Linux_Arm7.zip gollum
 
 .PHONY: win # Build gollum zip-file for Windows (x64)
 win:
-	@echo "\033[0;33mBuilding for Windows/x64\033[0;0m"
+	@printf "\033[0;33mBuilding for Windows/x64\033[0;0m"
 	@GOOS=windows GOARCH=amd64 $(GO_ENV) go build $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -o gollum.exe
 	@zip dist/gollum-$(GOLLUM_VERSION)-Windows_x64.zip gollum
 
 .PHONY: docker # Build the gollum docker image
 docker:
-	@echo "\033[0;33mBuilding docker image\033[0;0m"
+	@printf "\033[0;33mBuilding docker image\033[0;0m"
 	@docker build -t trivago/gollum:$(GOLLUM_VERSION) .
 
 .PHONY: docker-dev # Build the gollum docker development image
 docker-dev:
-	@echo "\033[0;33mBuilding development docker image\033[0;0m"
+	@printf "\033[0;33mBuilding development docker image\033[0;0m"
 	@docker build -t trivago/gollum:$(GOLLUM_VERSION)-dev -f Dockerfile-dev .
 
 .PHONY: build # Build the gollum binary for the current platform
@@ -101,17 +101,17 @@ test: test-unit test-integration
 
 .PHONY: test-unit # Run all unit tests
 test-unit:
-	@echo "\033[0;33mRunning unit tests\033[0;0m"
+	@printf "\033[0;33mRunning unit tests\033[0;0m"
 	@$(GO_ENV) go test $(GO_FLAGS) -v -cover -timeout 10s -race -tags="$(TAGS_GOLLUM) $(TAGS_UNIT)" ./...
 
 .PHONY: test-native # Run all unit tests for native plugins
 test-native:
-	@echo "\033[0;33mRunning unit tests for native plugins\033[0;0m"
+	@printf "\033[0;33mRunning unit tests for native plugins\033[0;0m"
 	@$(GO_ENV) go test $(GO_FLAGS) -v -cover -timeout 10s -race -tags="$(TAGS_GOLLUM)" ./contrib/native/...
 
 .PHONY: test-integration # Run all integration tests
 test-integration:: build
-	@echo "\033[0;33mRunning integration tests\033[0;0m"
+	@printf "\033[0;33mRunning integration tests\033[0;0m"
 	@$(GO_ENV) go test $(GO_FLAGS) -v -race -tags="$(TAGS_GOLLUM) $(TAGS_INTEGRATION)" ./testing/integration
 
 #############################################################################################################
@@ -122,7 +122,7 @@ lint: lint-fmt lint-meta
 
 .PHONY: lint-meta # Run the go meta linter
 lint-meta:
-	@echo "\033[0;33mRunning go linters\033[0;0m"
+	@printf "\033[0;33mRunning go linters\033[0;0m"
 	@gometalinter.v2 --vendor --cyclo-over=20 \
 	--disable=goconst \
 	--disable=gas \
@@ -137,17 +137,17 @@ lint-meta:
 	--deadline=5m \
 	--concurrency=4 \
 	 ./...
-	@echo "\033[0;32mDone\033[0;0m"
+	@printf "\033[0;32mDone\033[0;0m"
 
 .PHONY: lint-fmt # Run go fmt and see if anything would be changed
 lint-fmt:
-	@echo "\033[0;33mRunning go fmt\033[0;0m"
+	@printf "\033[0;33mRunning go fmt\033[0;0m"
 ifneq ($(shell go list -f '"cd {{.Dir}}; gofmt -s -l {{join .GoFiles " "}}"' ./... | xargs sh -c), )
 	@go list -f '"cd {{.Dir}}; gofmt -s -l {{join .GoFiles " "}}"' ./... | xargs sh -c
-	@echo "\033[0;31mFAILED\033[0;0m"
+	@printf "\033[0;31mFAILED\033[0;0m"
 	@exit 1
 else
-	@echo "\033[0;32mOK\033[0;0m"
+	@printf "\033[0;32mOK\033[0;0m"
 endif
 
 #############################################################################################################
@@ -155,11 +155,11 @@ endif
 
 .PHONY: pipeline-tools # Go get required tools
 pipeline-tools:
-	@echo "\033[0;33mInstalling required go tools ...\033[0;0m"
+	@printf "\033[0;33mInstalling required go tools ...\033[0;0m"
 	@go get -u github.com/mattn/goveralls
 	@go get -u gopkg.in/alecthomas/gometalinter.v2
 	@gometalinter.v2 --install
-	@echo "\033[0;32mDone\033[0;0m"
+	@printf "\033[0;32mDone\033[0;0m"
 
 .PHONY: pipeline-accept # Accept runs all targets required for PR acceptance
 pipeline-accept: | lint test
@@ -169,28 +169,28 @@ pipeline-build: mac linux win freebsd
 
 .PHONY: pipeline-coverage # Generate cover profiles files required for PR acceptance
 pipeline-coverage:
-	@echo "\033[0;33mGenerating cover profiles\033[0;0m"
+	@printf "\033[0;33mGenerating cover profiles\033[0;0m"
 	@$(GO_ENV) go test $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -covermode=count -coverprofile=core.cov ./core
 	@$(GO_ENV) go test $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -covermode=count -coverprofile=format.cov ./format
 	@$(GO_ENV) go test $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -covermode=count -coverprofile=filter.cov ./filter
 	@$(GO_ENV) go test $(GO_FLAGS) -tags="$(TAGS_GOLLUM)" -covermode=count -coverprofile=router.cov ./router
 
-	@echo "INFO: start generating profile.cov"
+	@printf "INFO: start generating profile.cov"
 	@rm -f profile.tmp profile.cov
 
-	@echo "mode: count" > profile.tmp
+	@printf "mode: count" > profile.tmp
 	@for cov_file in  $$( ls -f *.cov ); do cat $${cov_file} | grep -v "mode: " >> profile.tmp ; done
 	@mv profile.tmp profile.cov
 
-	@echo "INFO: profile.cov successfully generated"
+	@printf "INFO: profile.cov successfully generated"
 	@rm core.cov format.cov filter.cov router.cov
 
 #############################################################################################################
 
 .PHONY: help # Print the make help screen
 help:
-	@echo "GOLLUM v$(GOLLUM_VERSION)"
-	@echo "Make targets overview"
-	@echo
-	@echo "\033[0;33mAvailable targets:"
+	@printf "GOLLUM v$(GOLLUM_VERSION)"
+	@printf "Make targets overview"
+	@printf
+	@printf "\033[0;33mAvailable targets:"
 	@grep '^.PHONY: .* #' makefile | sed -E 's/\.PHONY: (.*) # (.*)/"\1" "\2"/g' | xargs printf "  \033[0;32m%-25s \033[0;0m%s\n"
