@@ -51,7 +51,12 @@ require (
 	github.com/trivago/grok v1.0.0
 	github.com/trivago/tgo v1.0.5
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
+	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
+	golang.org/x/sys v0.0.0-20200905004654-be1d3432aa8f // indirect
+	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/tools v0.0.0-20200904185747-39188db58858 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/mcuadros/go-syslog.v2 v2.2.1

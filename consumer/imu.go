@@ -50,8 +50,8 @@ import (
 type Imu struct {
 	core.SimpleConsumer `gollumdoc:"embed_type"`
 	busName             string `config:"Bus"`
-	accelAddr           string `config:"AccelerometerAddress" default:"0x6B` //TODO:This not being set right
-	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1E` //TODO:This is not being set right
+	accelAddr           string `config:"AccelerometerAddress" default:"0x6B"`
+	magnetoAddr         string `config:"MagnetometerAddress" default:"0x1E"`
 	bus                 i2c.BusCloser
 	accel               *i2c.Dev
 	gRes                float32
@@ -87,15 +87,13 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 
 	// Open I2C Bus
 	//fmt.Printf("open I2C bus\n");
-	if cons.bus, err = i2creg.Open("/dev/i2c-2"/*cons.busName*/); err != nil {
+	if cons.bus, err = i2creg.Open("/dev/i2c-2" /*cons.busName*/); err != nil {
 		cons.Logger.Error(err)
 	}
 
 	// Parse out the accelerometer address
 	//fmt.Printf("parse XL address from:%s\n",cons.accelAddr);
-	//accelAddrInt, err := strconv.ParseUint(cons.accelAddr, 0, 16) //TODO: Fix this
-	accelAddrInt, err := strconv.ParseUint("0x6B", 0, 16)
-	//accelAddrInt := 0x6B
+	accelAddrInt, err := strconv.ParseUint(cons.accelAddr, 0, 16)
 	if err != nil {
 		cons.Logger.Error(err)
 	}
@@ -104,8 +102,7 @@ func (cons *Imu) Configure(conf core.PluginConfigReader) {
 
 	// Parse out the magnetometer address
 	//fmt.Printf("parse magnet address\n");
-	//magnetoAddrInt, err := strconv.ParseUint(cons.magnetoAddr, 0, 16) //TODO: Fix this
-	magnetoAddrInt := 0x1E
+	magnetoAddrInt, err := strconv.ParseUint(cons.magnetoAddr, 0, 16)
 	if err != nil {
 		cons.Logger.Error(err)
 	}
@@ -131,18 +128,18 @@ func (cons *Imu) pollAccel() {
 			cons.Logger.Error(err)
 		}
 
-		valuex := uint16(r[1] << 8) | uint16(r[0])
-		valuey := uint16(r[3] << 8) | uint16(r[2])
-		valuez := uint16(r[5] << 8) | uint16(r[4])
-		fvaluex := cons.calcVal(valuex,cons.aRes)
-		fvaluey := cons.calcVal(valuey,cons.aRes)
-		fvaluez := cons.calcVal(valuez,cons.aRes)
+		valuex := uint16(r[1]<<8) | uint16(r[0])
+		valuey := uint16(r[3]<<8) | uint16(r[2])
+		valuez := uint16(r[5]<<8) | uint16(r[4])
+		fvaluex := cons.calcVal(valuex, cons.aRes)
+		fvaluey := cons.calcVal(valuey, cons.aRes)
+		fvaluez := cons.calcVal(valuez, cons.aRes)
 
 		//Enqueue raw data
-		str := fmt.Sprintf("{\"XL\":%d,%d,%d}\n",valuex,valuey,valuez)
+		str := fmt.Sprintf("{\"XL\":%d,%d,%d}\n", valuex, valuey, valuez)
 		cons.Enqueue([]byte(str))
 		//Enqueue calculated data
-		str = fmt.Sprintf("{\"XLCalc\":%f,%f,%f}\n",fvaluex,fvaluey,fvaluez)
+		str = fmt.Sprintf("{\"XLCalc\":%f,%f,%f}\n", fvaluex, fvaluey, fvaluez)
 		cons.Enqueue([]byte(str))
 
 		/*// Enqueue new value
@@ -176,18 +173,18 @@ func (cons *Imu) pollGyro() {
 			cons.Logger.Error(err)
 		}
 
-		valuex := uint16(r[1] << 8) | uint16(r[0])
-		valuey := uint16(r[3] << 8) | uint16(r[2])
-		valuez := uint16(r[5] << 8) | uint16(r[4])
-		fvaluex := cons.calcVal(valuex,cons.gRes)
-		fvaluey := cons.calcVal(valuey,cons.gRes)
-		fvaluez := cons.calcVal(valuez,cons.gRes)
+		valuex := uint16(r[1]<<8) | uint16(r[0])
+		valuey := uint16(r[3]<<8) | uint16(r[2])
+		valuez := uint16(r[5]<<8) | uint16(r[4])
+		fvaluex := cons.calcVal(valuex, cons.gRes)
+		fvaluey := cons.calcVal(valuey, cons.gRes)
+		fvaluez := cons.calcVal(valuez, cons.gRes)
 
 		//Enqueue raw data
-		str := fmt.Sprintf("{\"G\":%d,%d,%d}\n",valuex,valuey,valuez)
+		str := fmt.Sprintf("{\"G\":%d,%d,%d}\n", valuex, valuey, valuez)
 		cons.Enqueue([]byte(str))
 		//Enqueue calculated data
-		str = fmt.Sprintf("{\"GCalc\":%f,%f,%f}\n",fvaluex,fvaluey,fvaluez)
+		str = fmt.Sprintf("{\"GCalc\":%f,%f,%f}\n", fvaluex, fvaluey, fvaluez)
 		cons.Enqueue([]byte(str))
 
 		/*// Enqueue new value
@@ -212,9 +209,9 @@ func (cons *Imu) pollGyro() {
 	}
 }
 
-func (cons *Imu) calcVal(value uint16, res float32)(float32) {
+func (cons *Imu) calcVal(value uint16, res float32) float32 {
 	//fmt.Printf("%d\n",value)
-	out:=float32(value)*res
+	out := float32(value) * res
 	return out
 }
 
@@ -229,101 +226,101 @@ func (cons *Imu) Consume(workers *sync.WaitGroup) {
 }
 
 func (cons *Imu) initGyro() {
-	fmt.Printf("initGyro\n");
+	fmt.Printf("initGyro\n")
 	var err error
-	err = writeReg(cons.accel, 0x10, []byte{0xC0})//CTRL_REG1_G
+	err = writeReg(cons.accel, 0x10, []byte{0xC0}) //CTRL_REG1_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
 	cons.Logger.Error(err)
-	err = writeReg(cons.accel, 0x11, []byte{0x00})//CTRL_REG2_G
+	err = writeReg(cons.accel, 0x11, []byte{0x00}) //CTRL_REG2_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.accel, 0x12, []byte{0x00})//CTRL_REG3_G
+	err = writeReg(cons.accel, 0x12, []byte{0x00}) //CTRL_REG3_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.accel, 0x1E, []byte{0x38})//CTRL_REG4_G
+	err = writeReg(cons.accel, 0x1E, []byte{0x38}) //CTRL_REG4_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
 	//Set scale
-	r, err := readReg(cons.accel, 0x10, 1)//CTRL_REG1_G
+	r, err := readReg(cons.accel, 0x10, 1) //CTRL_REG1_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	var gScl=0
-	r[0]&=byte (0xFF^(0x3<<3))
-	r[0]|=byte (gScl<<3)
+	var gScl = 0
+	r[0] &= byte(0xFF ^ (0x3 << 3))
+	r[0] |= byte(gScl << 3)
 	//Set ODR
-	var gODR=0x1//14.9Hz
-	r[0]&=byte (0xFF^(0x7<<5))
-	r[0]|=byte (gODR<<5)
+	var gODR = 0x1 //14.9Hz
+	r[0] &= byte(0xFF ^ (0x7 << 5))
+	r[0] |= byte(gODR << 5)
 	//Write both
-	err = writeReg(cons.accel, 0x10, r)//CTRL_REG1_G
+	err = writeReg(cons.accel, 0x10, r) //CTRL_REG1_G
 	if err != nil {
 		cons.Logger.Error(err)
 	}
 	//calcgRes
 	//00=245,01=500,11=2000
-	cons.gRes=float32(245)/32768.0
+	cons.gRes = float32(245) / 32768.0
 }
 func (cons *Imu) initAccel() {
-	fmt.Printf("initAccel\n");
+	fmt.Printf("initAccel\n")
 	var err error
-	err = writeReg(cons.accel, 0x1F, []byte{0x38})//CTRL_REG5_XL
+	err = writeReg(cons.accel, 0x1F, []byte{0x38}) //CTRL_REG5_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.accel, 0x20, []byte{0x20})//CTRL_REG6_XL
+	err = writeReg(cons.accel, 0x20, []byte{0x20}) //CTRL_REG6_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.accel, 0x21, []byte{0x00})//CTRL_REG7_XL
+	err = writeReg(cons.accel, 0x21, []byte{0x00}) //CTRL_REG7_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
 	//Set scale
-	r, err := readReg(cons.accel, 0x20, 1)//CTRL_REG6_XL
+	r, err := readReg(cons.accel, 0x20, 1) //CTRL_REG6_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	var aScl=0//+-2g
-	r[0]&=byte (0xC7)
-	r[0]|=byte (aScl<<3)
+	var aScl = 0 //+-2g
+	r[0] &= byte(0xC7)
+	r[0] |= byte(aScl << 3)
 	//Set ODR
-	var aODR=0x1//10Hz
-	r[0]&=byte (0x1F)
-	r[0]|=byte (aODR<<5)
+	var aODR = 0x1 //10Hz
+	r[0] &= byte(0x1F)
+	r[0] |= byte(aODR << 5)
 	//Write both
-	err = writeReg(cons.accel, 0x20, r)//CTRL_REG6_XL
+	err = writeReg(cons.accel, 0x20, r) //CTRL_REG6_XL
 	if err != nil {
 		cons.Logger.Error(err)
 	}
 	//calcaRes
 	//00=2,01=16,10=4,11=8
-	cons.aRes=float32(2)/32768.0
+	cons.aRes = float32(2) / 32768.0
 }
 func (cons *Imu) initMag() {
 	var err error
-	err = writeReg(cons.magneto, 0x20, []byte{0x1C})//CTRL_REG1_M
+	err = writeReg(cons.magneto, 0x20, []byte{0x1C}) //CTRL_REG1_M
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.magneto, 0x21, []byte{0x00})//CTRL_REG2_M
+	err = writeReg(cons.magneto, 0x21, []byte{0x00}) //CTRL_REG2_M
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.magneto, 0x22, []byte{0x00})//CTRL_REG3_M
+	err = writeReg(cons.magneto, 0x22, []byte{0x00}) //CTRL_REG3_M
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.magneto, 0x23, []byte{0x00})//CTRL_REG4_M
+	err = writeReg(cons.magneto, 0x23, []byte{0x00}) //CTRL_REG4_M
 	if err != nil {
 		cons.Logger.Error(err)
 	}
-	err = writeReg(cons.magneto, 0x24, []byte{0x00})//CTRL_REG5_M
+	err = writeReg(cons.magneto, 0x24, []byte{0x00}) //CTRL_REG5_M
 	if err != nil {
 		cons.Logger.Error(err)
 	}
